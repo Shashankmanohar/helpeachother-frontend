@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-    baseURL: '/', // Relying on Vite proxy for /api
+    baseURL: import.meta.env.VITE_API_URL || 'https://helpeachother-backend.vercel.app', // Using backend Vercel URL
     headers: {
         'Content-Type': 'application/json',
     },
