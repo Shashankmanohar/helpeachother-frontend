@@ -38,9 +38,9 @@ const PaymentPage = () => {
         }
     }, [navigate]);
 
-    // Poll for approval status when submitted
+    // Poll for approval status when not approved
     useEffect(() => {
-        if (paymentStatus !== 'submitted') return;
+        if (paymentStatus === 'approved') return;
 
         setPolling(true);
         const interval = setInterval(async () => {

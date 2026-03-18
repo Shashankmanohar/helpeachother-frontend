@@ -1,10 +1,37 @@
+import { useEffect } from 'react';
 import { Icon } from '@iconify/react';
 import { useApp } from '@/context/AppContext';
+import { useApi } from '@/hooks/useApi';
 import { BusinessPlan } from '@/config/businessPlan';
 
 const ProfileView = () => {
   const { state, dispatch, showToast, addTx } = useApp();
+  const api = useApi();
   const comp = BusinessPlan.company_overview;
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const data = await api.get('/api/user/profile');
+        if (data) {
+          dispatch({
+            type: 'UPDATE_USER',
+            payload: {
+              id: data._id,
+              name: data.name,
+              userName: data.userName,
+              referralCode: data.referralCode,
+              active: data.status === 'active',
+              kyc: data.kycStatus === 'approved' || data.kycStatus === 'completed'
+            }
+          });
+        }
+      } catch (e) {
+        console.error("Failed to fetch profile");
+      }
+    };
+    fetchProfile();
+  }, [api, dispatch]);
 
   const verifyKyc = () => {
     dispatch({ type: 'SET_KYC', value: true });
@@ -44,7 +71,8 @@ const ProfileView = () => {
           </div>
           <div>
             <h3 className="text-lg font-medium text-foreground">{state.user.name || 'User'}</h3>
-            <p className="text-sm text-muted-foreground font-normal">ID: {state.user.id || 'Pending'} | Code: <span className="text-primary font-bold">{state.user.referralCode || state.user.userName || 'PENDING'}</span></p>
+            <p className="text-xs text-primary font-bold uppercase mb-1">@{state.user.userName || 'username'}</p>
+            <p className="text-sm text-muted-foreground font-normal">ID: {state.user.id || 'Pending'} | Code: <span className="text-primary font-bold">{state.user.referralCode || 'PENDING'}</span></p>
 
             <div className="mt-2">
               {state.user.kyc ? (

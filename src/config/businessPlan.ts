@@ -38,12 +38,17 @@ export const BusinessPlan = {
   },
   rules_and_compliance: {
     minimum_withdrawal_points: 500,
-    charges: { admin: 15, tds: 5 }
+    charges: { admin: 15, tds: 5 },
+    referral_constraints: {
+      recent: { count: 2, days: 30 },
+      lifetime_streak: { count_per_month: 2, months: 3 }
+    }
   },
   daily_cashback: {
     daily_amount: 40,
     max_days_per_month: 22,
-    valid_months: 3
+    valid_months: 3,
+    days_allowed: "Mon-Fri"
   }
 };
 

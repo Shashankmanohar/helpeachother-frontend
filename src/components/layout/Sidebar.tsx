@@ -6,6 +6,7 @@ const navItems = [
   { id: 'activate', label: 'Activate ID', icon: 'solar:shield-check', group: 'Main Menu' },
   { id: 'pins', label: 'E-Pins', icon: 'solar:ticket', group: 'Main Menu' },
   { id: 'cashback', label: 'Daily Cashback', icon: 'solar:hand-money', group: 'Growth' },
+  { id: 'levelincome', label: 'Level Income', icon: 'solar:graph-new', group: 'Growth' },
   { id: 'income', label: 'Dream Autopool Club', icon: 'solar:layers-minimalistic', group: 'Growth' },
   { id: 'team', label: 'My Network', icon: 'solar:users-group-rounded', group: 'Growth' },
   { id: 'joining', label: 'Packages', icon: 'solar:box', group: 'Growth' },

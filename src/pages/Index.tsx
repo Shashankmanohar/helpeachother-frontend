@@ -14,6 +14,7 @@ import StatementsView from '@/components/views/StatementsView';
 import ProfileView from '@/components/views/ProfileView';
 import DailyCashbackView from '@/components/views/DailyCashbackView';
 import KYCView from '@/components/views/KYCView';
+import LevelIncomeView from '@/components/views/LevelIncomeView';
 
 const views: Record<string, React.FC> = {
   dashboard: DashboardView,
@@ -21,6 +22,7 @@ const views: Record<string, React.FC> = {
   activate: ActivateView,
   team: NetworkView,
   income: AutopoolView,
+  levelincome: LevelIncomeView,
   wallet: WithdrawalView,
   joining: PackagesView,
   payout: StatementsView,

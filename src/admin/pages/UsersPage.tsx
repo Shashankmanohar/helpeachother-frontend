@@ -1,24 +1,87 @@
-import { useState } from "react";
-import { mockUsers, type User } from "@admin/lib/mock-data";
-import { formatCurrency, formatDate } from "@admin/lib/formatters";
+import { useState, useEffect } from "react";
+import { type User } from "../lib/mock-data";
+import { formatCurrency, formatDate } from "../lib/formatters";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, Eye, Ban, Trash2, ChevronLeft, ChevronRight, User as UserIcon, Wallet, Users as UsersIcon, Shield } from "lucide-react";
+import { Search, Eye, Ban, Trash2, ChevronLeft, ChevronRight, User as UserIcon, Wallet, Users as UsersIcon, Shield, CheckCircle2 } from "lucide-react";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
-import { useIsMobile } from "@admin/hooks/use-mobile";
+import { useIsMobile } from "../hooks/use-mobile";
+import { useApi } from "@/hooks/useApi";
+import { toast } from "sonner";
+import { motion } from "framer-motion";
 
 const ITEMS_PER_PAGE = 10;
 
 const UsersPage = () => {
-  const [users] = useState<User[]>(mockUsers);
+  const api = useApi();
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [kycFilter, setKycFilter] = useState<string>("all");
   const [page, setPage] = useState(1);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [showActivationForm, setShowActivationForm] = useState(false);
+  const [pinCode, setPinCode] = useState("");
+  const [submitting, setSubmitting] = useState(false);
   const isMobile = useIsMobile();
+
+  const fetchUsers = async () => {
+    try {
+      setLoading(true);
+      const data = await api.get("/api/admin/users");
+      const mappedUsers: User[] = data.map((u: any) => ({
+        id: u._id,
+        username: u.userName,
+        email: u.email,
+        status: u.status,
+        kycStatus: u.kycStatus,
+        walletBalance: u.walletBalance || 0,
+        totalEarned: u.totalEarned || 0,
+        directCount: u.directCount || 0,
+        teamCount: u.teamCount || 0,
+        activationStatus: u.status === 'active' ? 'Activated' : 'Inactive',
+        marriageClaim: 'None',
+        joinDate: u.createdAt,
+        blocked: u.status === 'blocked',
+      }));
+      setUsers(mappedUsers);
+    } catch (error) {
+      console.error("Failed to fetch users:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  const handleActivateWithPin = async () => {
+    if (!selectedUser || !pinCode) {
+      toast.error("Please enter a valid E-PIN");
+      return;
+    }
+    try {
+      setSubmitting(true);
+      await api.post("/api/admin/activate-user-pin", {
+        identifier: selectedUser.username,
+        pinCode: pinCode
+      });
+      toast.success(`User ${selectedUser.username} activated successfully`);
+      setShowActivationForm(false);
+      setPinCode("");
+      const updatedUser = { ...selectedUser, status: 'active', activationStatus: 'Activated' };
+      setSelectedUser(updatedUser);
+      setUsers(prev => prev.map(u => u.id === updatedUser.id ? updatedUser : u));
+    } catch (error) {
+      console.error("Activation failed:", error);
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   const filtered = users.filter((u) => {
     const matchSearch = u.username.toLowerCase().includes(search.toLowerCase()) || u.id.toLowerCase().includes(search.toLowerCase()) || u.email.toLowerCase().includes(search.toLowerCase());
@@ -57,7 +120,11 @@ const UsersPage = () => {
         </div>
       </div>
 
-      {users.length === 0 ? (
+      {loading ? (
+        <div className="flex h-64 items-center justify-center">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+        </div>
+      ) : users.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border bg-card py-16">
           <UsersIcon className="mb-3 h-10 w-10 text-muted-foreground/30" />
           <p className="text-sm text-muted-foreground">No users registered yet</p>
@@ -187,9 +254,43 @@ const UsersPage = () => {
                 <Button size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90">Add Balance</Button>
                 <Button size="sm" variant="outline">Deduct Balance</Button>
                 <Button size="sm" variant="outline">Reset Password</Button>
-                <Button size="sm" variant="outline" className="text-warning border-warning/30 hover:bg-warning/10">Force Activate</Button>
+                {selectedUser.status !== 'active' && !showActivationForm && (
+                  <Button size="sm" variant="outline" className="text-primary border-primary/30 hover:bg-primary/10" onClick={() => setShowActivationForm(true)}>Activate with PIN</Button>
+                )}
                 <Button size="sm" variant="outline" className="text-destructive border-destructive/30 hover:bg-destructive/10">Block User</Button>
               </div>
+
+              {showActivationForm && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  className="space-y-3 rounded-lg bg-secondary/30 p-3 border border-border mt-2"
+                >
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-semibold text-foreground">Activate Account</p>
+                    <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={() => setShowActivationForm(false)}>Cancel</Button>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] uppercase tracking-wider text-muted-foreground">Enter E-PIN Code</label>
+                    <div className="flex gap-2">
+                      <Input
+                        placeholder="e.g. HEO..."
+                        value={pinCode}
+                        onChange={(e) => setPinCode(e.target.value)}
+                        className="bg-background border-border"
+                      />
+                      <Button
+                        size="sm"
+                        className="bg-success text-success-foreground hover:bg-success/90 gap-1.5"
+                        onClick={handleActivateWithPin}
+                        disabled={submitting}
+                      >
+                        {submitting ? "..." : <><CheckCircle2 className="h-3.5 w-3.5" /> Activate</>}
+                      </Button>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
             </div>
           )}
         </DialogContent>

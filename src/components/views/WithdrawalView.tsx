@@ -97,6 +97,8 @@ const WithdrawalView = () => {
         <h1 className="text-2xl font-medium text-foreground tracking-tight">Withdrawal</h1>
         <p className="text-sm text-muted-foreground mt-1">Transfer funds to your bank account.</p>
       </div>
+
+      <EligibilityCard eligibility={state.wallet.referralEligibility} />
       
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
         {/* Withdrawal Form */}
@@ -171,5 +173,65 @@ const WithdrawalView = () => {
     </div>
   );
 };
+
+const EligibilityCard = ({ eligibility }: { eligibility: any }) => {
+  if (!eligibility) return null;
+
+  const { isEligible, lifetimeUnlocked, stats, reason } = eligibility;
+
+  return (
+    <div className={`mb-6 p-5 rounded-xl border ${isEligible ? 'bg-success/5 border-success/20' : 'bg-warning/5 border-warning/20'}`}>
+      <div className="flex items-center gap-3 mb-4">
+        <div className={`h-10 w-10 rounded-full flex items-center justify-center ${isEligible ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>
+          <Icon icon={lifetimeUnlocked ? "solar:crown-minimalistic-bold" : isEligible ? "solar:check-circle-bold" : "solar:shield-warning-bold"} width={24} />
+        </div>
+        <div>
+          <h3 className="text-sm font-semibold text-foreground">
+            {lifetimeUnlocked ? 'Lifetime Access Unlocked' : isEligible ? 'Withdrawal Eligible' : 'Referral Requirement'}
+          </h3>
+          <p className="text-[11px] text-muted-foreground">
+            {lifetimeUnlocked ? 'You have permanent access to withdrawals and E-PINs.' : isEligible ? 'Active monthly requirement met.' : 'Conditions not yet met.'}
+          </p>
+        </div>
+      </div>
+
+      {!lifetimeUnlocked && (
+        <div className="space-y-4">
+          <div className="grid grid-cols-3 gap-2">
+            <MonthStat label="Month 1" count={stats?.m1 || 0} target={2} />
+            <MonthStat label="Month 2" count={stats?.m2 || 0} target={2} />
+            <MonthStat label="Month 3" count={stats?.m3 || 0} target={2} />
+          </div>
+          <div className="bg-secondary/50 rounded-lg p-3 border border-border/50">
+            <div className="flex justify-between items-center mb-1">
+              <span className="text-[10px] uppercase font-medium text-muted-foreground">Last 30 Days</span>
+              <span className="text-xs font-bold text-foreground">{stats?.recent30Count || 0} / 2</span>
+            </div>
+            <div className="h-1.5 w-full bg-border rounded-full overflow-hidden">
+              <div 
+                className={`h-full transition-all ${isEligible ? 'bg-success' : 'bg-primary'}`} 
+                style={{ width: `${Math.min(((stats?.recent30Count || 0) / 2) * 100, 100)}%` }} 
+              />
+            </div>
+          </div>
+          {!isEligible && (
+            <p className="text-[10px] text-warning font-medium leading-relaxed italic">
+              * {reason}
+            </p>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
+const MonthStat = ({ label, count, target }: { label: string, count: number, target: number }) => (
+  <div className="bg-secondary/30 border border-border/50 rounded-lg p-2 text-center">
+    <p className="text-[9px] text-muted-foreground uppercase mb-1">{label}</p>
+    <p className={`text-sm font-bold ${count >= target ? 'text-success' : 'text-foreground'}`}>
+      {count} / {target}
+    </p>
+  </div>
+);
 
 export default WithdrawalView;

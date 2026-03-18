@@ -1,47 +1,112 @@
-import { useState } from "react";
-import { Key, Plus, CheckCircle2, Circle, XCircle, Trash2, Ban, Copy } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Key, Plus, CheckCircle2, Circle, XCircle, Trash2, Ban, Copy, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useIsMobile } from "@admin/hooks/use-mobile";
+import { useIsMobile } from "../hooks/use-mobile";
 import { toast } from "sonner";
-import { PIN_BASE_PRICE, PIN_ADMIN_CHARGE_PERCENT, PIN_TOTAL_PRICE, type Pin } from "@admin/lib/mock-data";
-import { formatCurrency } from "@admin/lib/formatters";
+import { PIN_BASE_PRICE, PIN_ADMIN_CHARGE_PERCENT, PIN_TOTAL_PRICE } from "../lib/mock-data";
+import { formatCurrency } from "../lib/formatters";
 import { motion, AnimatePresence } from "framer-motion";
+import { useApi } from "@/hooks/useApi";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
-const generateCode = () => Math.random().toString(36).substring(2, 8).toUpperCase();
+interface Pin {
+  id: string;
+  code: string;
+  status: 'available' | 'used' | 'deactivated';
+  assignedTo: string;
+  price: number;
+  adminCharge: number;
+  totalPrice: number;
+  createdAt: string;
+}
 
 const PinsPage = () => {
   const isMobile = useIsMobile();
+  const api = useApi();
   const [pins, setPins] = useState<Pin[]>([]);
   const [count, setCount] = useState(1);
+  const [loading, setLoading] = useState(true);
+  const [activationPin, setActivationPin] = useState<string | null>(null);
+  const [targetUsername, setTargetUsername] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleGenerate = () => {
+  const fetchPins = async () => {
+    try {
+      setLoading(true);
+      const data = await api.get("/api/admin/pins");
+      const mappedPins: Pin[] = data.map((p: any) => ({
+        id: p._id,
+        code: p.code,
+        status: p.status === 'active' ? 'available' : p.status,
+        assignedTo: p.usedBy?.userName || p.usedBy?.name || '—',
+        price: p.value || PIN_BASE_PRICE,
+        adminCharge: Math.round((p.value || PIN_BASE_PRICE) * PIN_ADMIN_CHARGE_PERCENT / 100),
+        totalPrice: (p.value || PIN_BASE_PRICE) + Math.round((p.value || PIN_BASE_PRICE) * PIN_ADMIN_CHARGE_PERCENT / 100),
+        createdAt: p.createdAt,
+      }));
+      setPins(mappedPins);
+    } catch (error) {
+      console.error("Failed to fetch pins:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchPins();
+  }, []);
+
+  const handleGenerate = async () => {
     if (count < 1 || count > 100) {
       toast.error("Enter a count between 1 and 100");
       return;
     }
-    const newPins: Pin[] = Array.from({ length: count }, (_, i) => ({
-      id: `PIN-${String(pins.length + i + 1).padStart(6, '0')}`,
-      code: generateCode(),
-      status: 'available' as const,
-      assignedTo: '—',
-      price: PIN_BASE_PRICE,
-      adminCharge: Math.round(PIN_BASE_PRICE * PIN_ADMIN_CHARGE_PERCENT / 100),
-      totalPrice: PIN_TOTAL_PRICE,
-      createdAt: new Date().toISOString(),
-    }));
-    setPins(prev => [...newPins, ...prev]);
-    toast.success(`${count} pin(s) generated @ ${formatCurrency(PIN_TOTAL_PRICE)} each`);
+    try {
+      await api.post("/api/admin/pins/generate", { count, value: PIN_BASE_PRICE });
+      toast.success(`${count} pin(s) generated`);
+      fetchPins();
+    } catch (error) {
+      console.error("Failed to generate pins:", error);
+    }
+  };
+
+  const handleActivateUser = async () => {
+    if (!targetUsername) {
+      toast.error("Please enter a username or email");
+      return;
+    }
+    try {
+      setSubmitting(true);
+      await api.post("/api/admin/activate-user-pin", {
+        identifier: targetUsername,
+        pinCode: activationPin
+      });
+      toast.success(`User ${targetUsername} activated successfully`);
+      setActivationPin(null);
+      setTargetUsername("");
+      fetchPins();
+    } catch (error) {
+      console.error("Activation failed:", error);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleDeactivate = (id: string) => {
-    setPins(prev => prev.map(p => p.id === id ? { ...p, status: 'deactivated' as const } : p));
-    toast.success("Pin deactivated");
+    // Backend doesn't have this yet, but we'll leave the UI
+    toast.info("Feature coming soon");
   };
 
   const handleDelete = (id: string) => {
-    setPins(prev => prev.filter(p => p.id !== id));
-    toast.success("Pin deleted");
+    // Backend doesn't have this yet
+    toast.info("Feature coming soon");
   };
 
   const handleCopy = (code: string) => {
@@ -117,7 +182,12 @@ const PinsPage = () => {
                   </div>
                   <div>
                     <p className="font-mono text-sm font-medium text-foreground">{pin.code}</p>
-                    <p className="text-[10px] text-muted-foreground">{formatCurrency(pin.totalPrice)}</p>
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <p className="text-[10px] text-muted-foreground">{formatCurrency(pin.totalPrice)}</p>
+                      {pin.status === 'used' && (
+                        <span className="text-[10px] bg-info/10 text-info px-1.5 py-0.5 rounded-full font-medium">By: {pin.assignedTo}</span>
+                      )}
+                    </div>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
@@ -127,6 +197,7 @@ const PinsPage = () => {
                   }>{pin.status}</span>
                   {pin.status === 'available' && (
                     <div className="flex gap-1">
+                      <Button variant="ghost" size="icon" className="h-7 w-7 text-primary hover:bg-primary/10" title="Activate User" onClick={() => setActivationPin(pin.code)}><UserPlus className="h-3.5 w-3.5" /></Button>
                       <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground" onClick={() => handleCopy(pin.code)}><Copy className="h-3.5 w-3.5" /></Button>
                       <Button variant="ghost" size="icon" className="h-7 w-7 text-warning hover:bg-warning/10" onClick={() => handleDeactivate(pin.id)}><Ban className="h-3.5 w-3.5" /></Button>
                       <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:bg-destructive/10" onClick={() => handleDelete(pin.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
@@ -145,7 +216,7 @@ const PinsPage = () => {
                 <th className="data-table-header px-4 py-3 text-left">Pin ID</th>
                 <th className="data-table-header px-4 py-3 text-left">Code</th>
                 <th className="data-table-header px-4 py-3 text-center">Status</th>
-                <th className="data-table-header px-4 py-3 text-left">Assigned To</th>
+                <th className="data-table-header px-4 py-3 text-left">Activated By</th>
                 <th className="data-table-header px-4 py-3 text-right">Base Price</th>
                 <th className="data-table-header px-4 py-3 text-right">Admin ({PIN_ADMIN_CHARGE_PERCENT}%)</th>
                 <th className="data-table-header px-4 py-3 text-right">Total</th>
@@ -167,17 +238,24 @@ const PinsPage = () => {
                     <td className="px-4 py-3 text-center">
                       <span className={pin.status === 'available' ? 'status-badge-success' : pin.status === 'used' ? 'status-badge-info' : 'status-badge-destructive'}>{pin.status}</span>
                     </td>
-                    <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{pin.assignedTo}</td>
+                    <td className="px-4 py-3">
+                      {pin.status === 'used' ? (
+                        <span className="font-medium text-info">{pin.assignedTo}</span>
+                      ) : (
+                        <span className="text-muted-foreground/30">—</span>
+                      )}
+                    </td>
                     <td className="px-4 py-3 text-right text-muted-foreground">{formatCurrency(pin.price)}</td>
                     <td className="px-4 py-3 text-right text-warning">{formatCurrency(pin.adminCharge)}</td>
                     <td className="px-4 py-3 text-right font-semibold text-foreground">{formatCurrency(pin.totalPrice)}</td>
                     <td className="px-4 py-3">
                       <div className="flex items-center justify-center gap-1">
-                        <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground" onClick={() => handleCopy(pin.code)}><Copy className="h-3.5 w-3.5" /></Button>
+                        <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground" onClick={() => handleCopy(pin.code)} title="Copy Code"><Copy className="h-3.5 w-3.5" /></Button>
                         {pin.status === 'available' && (
                           <>
-                            <Button variant="ghost" size="icon" className="h-7 w-7 text-warning hover:bg-warning/10" onClick={() => handleDeactivate(pin.id)}><Ban className="h-3.5 w-3.5" /></Button>
-                            <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:bg-destructive/10" onClick={() => handleDelete(pin.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
+                            <Button variant="ghost" size="icon" className="h-7 w-7 text-primary hover:bg-primary/10" onClick={() => setActivationPin(pin.code)} title="Activate User"><UserPlus className="h-3.5 w-3.5" /></Button>
+                            <Button variant="ghost" size="icon" className="h-7 w-7 text-warning hover:bg-warning/10" onClick={() => handleDeactivate(pin.id)} title="Deactivate"><Ban className="h-3.5 w-3.5" /></Button>
+                            <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:bg-destructive/10" onClick={() => handleDelete(pin.id)} title="Delete"><Trash2 className="h-3.5 w-3.5" /></Button>
                           </>
                         )}
                       </div>
@@ -189,6 +267,39 @@ const PinsPage = () => {
           </table>
         </div>
       )}
+
+      <Dialog open={!!activationPin} onOpenChange={() => setActivationPin(null)}>
+        <DialogContent className="max-w-md bg-card border-border">
+          <DialogHeader>
+            <DialogTitle className="text-foreground">Activate User with PIN</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <p className="text-xs text-muted-foreground">E-PIN Code</p>
+              <p className="font-mono text-lg font-bold text-primary">{activationPin}</p>
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground">Username or Email</label>
+              <Input
+                placeholder="Enter user's identifier"
+                value={targetUsername}
+                onChange={(e) => setTargetUsername(e.target.value)}
+                className="bg-secondary border-border"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setActivationPin(null)}>Cancel</Button>
+            <Button
+              className="bg-primary text-primary-foreground hover:bg-primary/90"
+              onClick={handleActivateUser}
+              disabled={submitting}
+            >
+              {submitting ? "Activating..." : "Confirm Activation"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

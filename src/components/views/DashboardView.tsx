@@ -18,6 +18,8 @@ const DashboardView = () => {
         if (response) {
           const updatedUser = {
             ...state.user,
+            name: response.name || state.user.name,
+            userName: response.userName || state.user.userName,
             referralCode: response.referralCode || state.user.referralCode,
             active: response.status === 'active',
           };
@@ -28,7 +30,8 @@ const DashboardView = () => {
               balance: response.walletBalance || 0, 
               totalEarned: response.totalEarned || 0,
               levelIncome: response.levelIncome || 0,
-              activeDirects: response.activeDirects || 0
+              activeDirects: response.activeDirects || 0,
+              referralEligibility: response.referralEligibility
             }
           });
 

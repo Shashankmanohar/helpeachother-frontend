@@ -8,7 +8,7 @@ import { fmt } from '@/utils/format';
 const DailyCashbackView = () => {
   const { state, dispatch, showToast } = useApp();
   const api = useApi();
-  const { daily_cashback, level_income_structure } = BusinessPlan;
+  const { daily_cashback } = BusinessPlan;
 
   const [loading, setLoading] = useState(true);
   const [cashbackData, setCashbackData] = useState({
@@ -47,6 +47,11 @@ const DailyCashbackView = () => {
     if (isExpired) return 'Cashback Period Ended';
     if (monthlyMaxReached) return 'Monthly Limit Reached';
     if (alreadyCredited) return 'Automatically Credited Today';
+    
+    const day = new Date().getDay();
+    if (day === 5) return 'Credits Automatically Monday'; // Friday
+    if (day === 6 || day === 0) return 'Credits Automatically Monday'; // Sat or Sun
+    
     return 'Credits Automatically Tomorrow';
   };
 
@@ -56,10 +61,22 @@ const DailyCashbackView = () => {
     if (!alreadyCredited) return;
     const timer = setInterval(() => {
       const now = new Date();
-      const tomorrow = new Date(now);
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      tomorrow.setHours(0, 0, 0, 0);
-      const diff = tomorrow.getTime() - now.getTime();
+      const target = new Date(now);
+      
+      const day = now.getDay();
+      if (day === 5) { // Friday
+        target.setDate(now.getDate() + 3); // Monday
+      } else if (day === 6) { // Saturday
+        target.setDate(now.getDate() + 2); // Monday
+      } else if (day === 0) { // Sunday
+        target.setDate(now.getDate() + 1); // Monday
+      } else {
+        target.setDate(now.getDate() + 1); // Tomorrow
+      }
+      
+      target.setHours(0, 0, 0, 0);
+      
+      const diff = target.getTime() - now.getTime();
       const h = Math.floor(diff / 3600000);
       const m = Math.floor((diff % 3600000) / 60000);
       const s = Math.floor((diff % 60000) / 1000);
@@ -84,7 +101,7 @@ const DailyCashbackView = () => {
     <div className="space-y-6 page-enter">
       <div>
         <h1 className="text-2xl font-medium text-foreground tracking-tight">Daily Cashback</h1>
-        <p className="text-sm text-muted-foreground mt-1">Earn ₹{daily_cashback.daily_amount} daily for up to {daily_cashback.max_days_per_month} days/month, {daily_cashback.valid_months} months.</p>
+        <p className="text-sm text-muted-foreground mt-1">Earn ₹{daily_cashback.daily_amount} daily for up to {daily_cashback.max_days_per_month} days/month, {daily_cashback.valid_months} months (Mon-Fri only).</p>
       </div>
 
       {/* Main Card */}
@@ -158,44 +175,7 @@ const DailyCashbackView = () => {
         </div>
       </div>
 
-      {/* Level Income Structure Card */}
-      <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
-        <div className="p-5 border-b border-border bg-secondary/30">
-          <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
-            <Icon icon="solar:graph-new-linear" width={18} className="text-primary" />
-            Daily Level Income Structure
-          </h3>
-          <p className="text-[10px] text-muted-foreground mt-1 uppercase tracking-wider">Earnings when your referrals get daily cashback</p>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead>
-              <tr className="bg-secondary/50 text-muted-foreground uppercase tracking-wider font-medium border-b border-border">
-                <th className="px-5 py-3 font-medium">Level</th>
-                <th className="px-5 py-3 font-medium">Title</th>
-                <th className="px-5 py-3 font-medium text-right">Daily Bonus</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {level_income_structure.levels.map((level) => (
-                <tr key={level.level} className="hover:bg-secondary/20 transition-colors">
-                  <td className="px-5 py-3 font-medium text-foreground">Level {level.level}</td>
-                  <td className="px-5 py-3 text-muted-foreground">{level.title}</td>
-                  <td className="px-5 py-3 text-right">
-                    <span className="font-semibold text-success">₹{level.points}</span>
-                    <span className="text-[10px] ml-1 text-muted-foreground">/day</span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        <div className="p-4 bg-secondary/10 border-t border-border">
-          <p className="text-[10px] text-center text-muted-foreground italic">
-            * Referrals must be active and receiving their daily cashback for you to earn level income.
-          </p>
-        </div>
-      </div>
+
     </div>
   );
 };
