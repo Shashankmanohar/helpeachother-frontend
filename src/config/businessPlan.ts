@@ -1,6 +1,6 @@
 export const BusinessPlan = {
   company_overview: {
-    company_name: "Help Each Other Pvt.",
+    company_name: "HEO Sahyog",
     mission: "Empowering individuals through a structured, transparent, and performance-driven business ecosystem.",
     contact: { email: "support@heoenterprise.in", phone: "+91 98765 43210" }
   },

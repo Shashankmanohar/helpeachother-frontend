@@ -77,7 +77,7 @@ const WithdrawalView = () => {
             <Icon icon="solar:shield-warning-linear" width={28} className="text-warning" />
           </div>
           <h2 className="text-lg font-medium text-foreground">KYC Required</h2>
-          <p className="text-sm text-muted-foreground mt-2 mb-6">
+          <p className="text-sm text-muted-foreground mt-2 mb-6 text-center">
             Please complete your KYC verification before making a withdrawal.
           </p>
           <button
@@ -85,6 +85,35 @@ const WithdrawalView = () => {
             className="bg-primary text-primary-foreground px-6 py-2.5 rounded-lg text-sm font-medium hover:opacity-90 transition-colors click-scale shadow-sm"
           >
             Complete KYC →
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Autopool requirement for high earners — block withdrawal
+  if ((state.wallet.totalEarned || 0) >= 10000 && !state.wallet.hasJoinedAutopool) {
+    return (
+      <div className="space-y-6 page-enter">
+        <div>
+          <h1 className="text-2xl font-medium text-foreground tracking-tight">Withdrawal</h1>
+          <p className="text-sm text-muted-foreground mt-1">Transfer funds to your bank account.</p>
+        </div>
+        <div className="max-w-md mx-auto mt-8 text-center bg-card border border-border rounded-xl p-8 shadow-sm">
+          <div className="h-14 w-14 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Icon icon="solar:layers-bold-duotone" width={28} className="text-primary" />
+          </div>
+          <h2 className="text-lg font-medium text-foreground">Autopool Required</h2>
+          <p className="text-sm text-muted-foreground mt-2 mb-6 leading-relaxed">
+            You have earned over <span className="text-foreground font-bold font-mono">₹10,000</span>. 
+            To continue withdrawing funds, you are now required to join the 
+            <span className="text-primary font-bold"> Dream Autopool Club</span>.
+          </p>
+          <button
+            onClick={() => dispatch({ type: 'SET_TAB', tab: 'autopool' })}
+            className="bg-primary text-primary-foreground px-6 py-2.5 rounded-lg text-sm font-medium hover:opacity-90 transition-colors click-scale shadow-sm"
+          >
+            Join Autopool Now →
           </button>
         </div>
       </div>

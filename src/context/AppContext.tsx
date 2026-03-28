@@ -50,6 +50,7 @@ export interface AppState {
       reason?: string;
       stats?: { m1: number; m2: number; m3: number; recent30Count: number };
     };
+    hasJoinedAutopool?: boolean;
   };
   team: { direct: number; total: number; active: number };
   transactions: Transaction[];
@@ -77,7 +78,7 @@ type Action =
   | { type: 'CLAIM_MARRIAGE' }
   | { type: 'CREDIT_CASHBACK'; amount: number; date: string }
   | { type: 'UPDATE_USER'; payload: any }
-  | { type: 'UPDATE_WALLET'; payload: { balance: number; totalEarned: number; levelIncome?: number; activeDirects?: number; referralEligibility?: any } }
+  | { type: 'UPDATE_WALLET'; payload: { balance: number; totalEarned: number; levelIncome?: number; activeDirects?: number; referralEligibility?: any; hasJoinedAutopool?: boolean } }
   | { type: 'RESET' };
 
 const generateInitialPools = (): Record<number, PoolState> => {

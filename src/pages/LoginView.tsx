@@ -18,6 +18,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
 const LoginView = () => {
+    // UPDATED BRANDING: HEO Sahyog
     const [isLogin, setIsLogin] = useState(true);
     const [showPassword, setShowPassword] = useState(false);
     const [formData, setFormData] = useState({
@@ -100,7 +101,7 @@ const LoginView = () => {
                     <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary/10 border border-primary/20 mb-4">
                         <ShieldCheck className="w-8 h-8 text-primary" />
                     </div>
-                    <h1 className="text-3xl font-bold text-white tracking-tight">Help Each Other Pvt.</h1>
+                    <h1 className="text-3xl font-bold text-white tracking-tight uppercase">HEO Sahyog</h1>
                     <p className="text-muted-foreground mt-2">Empowering Growth through Collaboration</p>
                 </div>
 

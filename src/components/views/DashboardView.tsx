@@ -31,7 +31,8 @@ const DashboardView = () => {
               totalEarned: response.totalEarned || 0,
               levelIncome: response.levelIncome || 0,
               activeDirects: response.activeDirects || 0,
-              referralEligibility: response.referralEligibility
+              referralEligibility: response.referralEligibility,
+              hasJoinedAutopool: response.hasJoinedAutopool
             }
           });
 

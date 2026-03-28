@@ -22,6 +22,7 @@ const PaymentPage = () => {
     const [loading, setLoading] = useState(false);
     const [paymentStatus, setPaymentStatus] = useState<string>('pending');
     const [polling, setPolling] = useState(false);
+    const [paymentInfo, setPaymentInfo] = useState<{ upiId: string, amount: number } | null>(null);
 
     // Load initial payment status
     useEffect(() => {
@@ -37,6 +38,19 @@ const PaymentPage = () => {
             } catch (e) { }
         }
     }, [navigate]);
+
+    // Fetch payment info
+    useEffect(() => {
+        const fetchPaymentInfo = async () => {
+            try {
+                const data = await api.get('/api/user/payment-info');
+                setPaymentInfo(data);
+            } catch (error) {
+                console.error("Failed to fetch payment info");
+            }
+        };
+        fetchPaymentInfo();
+    }, []);
 
     // Poll for approval status when not approved
     useEffect(() => {
@@ -114,7 +128,7 @@ const PaymentPage = () => {
                     <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary/10 border border-primary/20 mb-4">
                         <ShieldCheck className="w-8 h-8 text-primary" />
                     </div>
-                    <h1 className="text-3xl font-bold text-white tracking-tight">Help Each Other Pvt.</h1>
+                    <h1 className="text-3xl font-bold text-white tracking-tight uppercase">HEO Sahyog</h1>
                     <p className="text-muted-foreground mt-2">Complete Your Registration Payment</p>
                 </div>
 
@@ -139,46 +153,40 @@ const PaymentPage = () => {
 
                             {/* QR Code Area */}
                             <div className="flex justify-center">
-                                <div className="bg-white rounded-2xl p-4 shadow-lg relative">
-                                    {/* Generated QR-style pattern */}
-                                    <div className="w-48 h-48 relative flex items-center justify-center">
-                                        <svg viewBox="0 0 200 200" className="w-full h-full">
-                                            {/* QR code pattern */}
-                                            {/* Top-left finder */}
-                                            <rect x="10" y="10" width="50" height="50" fill="none" stroke="#000" strokeWidth="4"/>
-                                            <rect x="18" y="18" width="34" height="34" fill="#000"/>
-                                            {/* Top-right finder */}
-                                            <rect x="140" y="10" width="50" height="50" fill="none" stroke="#000" strokeWidth="4"/>
-                                            <rect x="148" y="18" width="34" height="34" fill="#000"/>
-                                            {/* Bottom-left finder */}
-                                            <rect x="10" y="140" width="50" height="50" fill="none" stroke="#000" strokeWidth="4"/>
-                                            <rect x="18" y="148" width="34" height="34" fill="#000"/>
-                                            {/* Data modules - Row patterns */}
-                                            {[70, 80, 90, 100, 110, 120].map(y =>
-                                                [10, 20, 30, 40, 70, 80, 100, 110, 130, 140, 150, 160, 170, 180].map(x => (
-                                                    <rect key={`${x}-${y}`} x={x} y={y} width="8" height="8" fill={(x + y) % 20 === 0 ? "#fff" : "#000"} opacity={0.9}/>
-                                                ))
-                                            )}
-                                            {[10, 20, 30, 40, 50].map(y =>
-                                                [70, 80, 90, 100, 110, 120].map(x => (
-                                                    <rect key={`m-${x}-${y}`} x={x} y={y} width="8" height="8" fill={(x * y) % 16 === 0 ? "#fff" : "#000"} opacity={0.9}/>
-                                                ))
-                                            )}
-                                            {[140, 150, 160, 170, 180].map(y =>
-                                                [70, 80, 90, 100, 110, 120].map(x => (
-                                                    <rect key={`b-${x}-${y}`} x={x} y={y} width="8" height="8" fill={(x + y) % 18 === 0 ? "#fff" : "#000"} opacity={0.9}/>
-                                                ))
-                                            )}
-                                            {[130, 140, 150, 160, 170, 180].map(y =>
-                                                [130, 140, 150, 160, 170, 180].map(x => (
-                                                    <rect key={`br-${x}-${y}`} x={x} y={y} width="8" height="8" fill={(x * y) % 14 === 0 ? "#fff" : "#000"} opacity={0.9}/>
-                                                ))
-                                            )}
-                                        </svg>
+                                <div className="bg-white rounded-3xl p-6 shadow-2xl relative border-4 border-primary/20">
+                                    {/* Generated QR Code */}
+                                    <div className="w-56 h-56 relative flex items-center justify-center p-2 bg-white rounded-2xl">
+                                        {paymentInfo ? (
+                                            <img
+                                                src={`https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(`upi://pay?pa=${paymentInfo.upiId}&pn=HEO Sahyog&am=${paymentInfo.amount}&cu=INR&tn=Registration Fee`)}`}
+                                                alt="Payment QR Code"
+                                                className="w-full h-full rounded-lg"
+                                            />
+                                        ) : (
+                                            <div className="w-full h-full flex flex-col items-center justify-center gap-2 text-muted-foreground">
+                                                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                                                <span className="text-xs font-medium">Generating QR...</span>
+                                            </div>
+                                        )}
                                     </div>
-                                    <div className="text-center mt-2">
-                                        <p className="text-xs font-medium text-gray-500">UPI Payment</p>
-                                        <p className="text-sm font-bold text-gray-800">₹1,199</p>
+                                    <div className="text-center mt-4 space-y-1">
+                                        <p className="text-[10px] uppercase tracking-widest font-bold text-gray-400">UPI ID</p>
+                                        <div 
+                                            className="bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100 cursor-pointer hover:bg-gray-100 transition-colors group"
+                                            onClick={() => {
+                                                if (paymentInfo) {
+                                                    navigator.clipboard.writeText(paymentInfo.upiId);
+                                                    showToast('UPI ID copied to clipboard!', 'success');
+                                                }
+                                            }}
+                                        >
+                                            <p className="text-sm font-black text-gray-800 font-mono tracking-tight">
+                                                {paymentInfo ? paymentInfo.upiId : 'Loading...'}
+                                            </p>
+                                        </div>
+                                        <p className="text-lg font-black text-emerald-600 mt-2">
+                                            ₹{paymentInfo ? paymentInfo.amount.toLocaleString() : '1,199'}
+                                        </p>
                                     </div>
                                 </div>
                             </div>

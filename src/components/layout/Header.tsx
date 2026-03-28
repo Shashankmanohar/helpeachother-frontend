@@ -18,7 +18,7 @@ const Header = () => {
         <button className="h-9 w-9 -ml-2 flex items-center justify-center text-muted-foreground active:scale-90 transition-transform">
           <Icon icon="solar:hamburger-menu-linear" width={22} />
         </button>
-        <span className="font-medium text-foreground text-base tracking-tight">Help Each Other</span>
+        <span className="font-bold text-foreground text-base tracking-tight uppercase">HEO Sahyog</span>
       </div>
       <div className="hidden md:block">
         <h2 className="text-sm font-medium text-muted-foreground tracking-tight">

@@ -63,14 +63,23 @@ const PinsView = () => {
           <h1 className="text-2xl font-medium text-foreground tracking-tight">E-PIN Manager</h1>
           <p className="text-sm text-muted-foreground mt-1">Buy E-PINs to activate users. Each costs ₹{unitPrice.toLocaleString()}.</p>
         </div>
-        <button
-          onClick={buyPin}
-          disabled={buying || !state.wallet.referralEligibility?.isEligible}
-          className="bg-primary text-primary-foreground px-5 py-2.5 rounded-lg text-sm font-medium hover:opacity-90 transition-colors click-scale flex items-center gap-2 shadow-sm disabled:opacity-50"
-        >
-          <Icon icon={buying ? "svg-spinners:ring-resize" : "solar:cart-large-minimalistic-linear"} width={18} />
-          {buying ? 'Purchasing...' : `Buy E-PIN (₹${unitPrice.toLocaleString()})`}
-        </button>
+        <div className="flex flex-col items-end gap-1.5">
+          <button
+            onClick={buyPin}
+            disabled={buying || !state.wallet.referralEligibility?.isEligible || (state.wallet.totalEarned || 0) < 10000}
+            className="bg-primary text-primary-foreground px-5 py-2.5 rounded-lg text-sm font-medium hover:opacity-90 transition-colors click-scale flex items-center gap-2 shadow-sm disabled:opacity-50"
+          >
+            <Icon icon={buying ? "svg-spinners:ring-resize" : "solar:cart-large-minimalistic-linear"} width={18} />
+            {buying ? 'Purchasing...' : `Buy E-PIN (₹${unitPrice.toLocaleString()})`}
+          </button>
+          
+          {(state.wallet.totalEarned || 0) < 10000 && (
+            <p className="text-[10px] text-warning font-medium flex items-center gap-1">
+              <Icon icon="solar:info-circle-bold" width={12} />
+              Requires ₹10,000 total earnings
+            </p>
+          )}
+        </div>
       </div>
 
       <EligibilityCard eligibility={state.wallet.referralEligibility} />

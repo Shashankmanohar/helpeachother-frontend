@@ -44,8 +44,8 @@ const Sidebar = () => {
             <div className="h-8 w-8 bg-primary text-primary-foreground rounded-lg flex items-center justify-center font-medium tracking-tight text-sm">
               H
             </div>
-            <span className="text-lg font-medium tracking-tight text-foreground">
-              Help Each Other<span className="text-muted-foreground font-normal"> Pvt.</span>
+            <span className="text-lg font-bold tracking-tight text-foreground uppercase">
+              HEO Sahyog
             </span>
           </div>
           <button

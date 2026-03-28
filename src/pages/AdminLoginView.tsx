@@ -147,7 +147,7 @@ const AdminLoginView = () => {
                 </div>
 
                 <p className="text-center text-[10px] text-muted-foreground/40 mt-8 uppercase tracking-[0.3em]">
-                    Help Each Other Pvt. © 2026 Internal System
+                    HEO Sahyog © 2026 Internal System
                 </p>
             </motion.div>
         </div>
