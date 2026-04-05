@@ -94,6 +94,11 @@ export function MobileNav() {
               <span className="text-xs font-medium">Logout</span>
             </button>
           </div>
+          <div className="mt-8 pt-4 border-t border-border/50 text-center">
+            <p className="text-[10px] text-muted-foreground/50 uppercase tracking-[0.2em] font-medium leading-relaxed">
+              Developed by <a href="https://webfloratechnologies.com" target="_blank" rel="noopener noreferrer" className="inline-block text-foreground/80 hover:text-blue-500 hover:scale-105 transition-all duration-200 font-bold">Webflora Technologies</a>
+            </p>
+          </div>
         </SheetContent>
       </Sheet>
     </>

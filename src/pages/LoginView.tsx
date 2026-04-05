@@ -245,6 +245,12 @@ const LoginView = () => {
                 <p className="text-center text-xs text-muted-foreground mt-8">
                     By continuing, you agree to our Terms of Service and Privacy Policy.
                 </p>
+
+                <div className="mt-8 text-center border-t border-white/5 pt-6">
+                    <p className="text-[10px] text-muted-foreground/50 uppercase tracking-[0.2em] font-medium">
+                        Developed by <a href="https://webfloratechnologies.com" target="_blank" rel="noopener noreferrer" className="inline-block text-white/80 hover:text-blue-500 hover:scale-105 transition-all duration-200 font-bold">Webflora Technologies</a>
+                    </p>
+                </div>
             </motion.div>
         </div>
     );

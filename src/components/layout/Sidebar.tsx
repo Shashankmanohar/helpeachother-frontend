@@ -103,6 +103,21 @@ const Sidebar = () => {
             <Icon icon="solar:settings-linear" width={18} className="text-muted-foreground group-hover:text-foreground transition-colors" />
           </button>
         </div>
+
+        {/* Branding */}
+        <div className="pb-6 pt-4 px-6 border-t border-border/40">
+          <p className="text-[10px] text-muted-foreground/60 text-center uppercase tracking-[0.2em] leading-relaxed">
+            Developed by <br />
+            <a 
+              href="https://webfloratechnologies.com" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="inline-block text-foreground/80 hover:text-blue-500 hover:scale-105 transition-all duration-200 font-bold"
+            >
+              Webflora Technologies
+            </a>
+          </p>
+        </div>
       </aside>
     </>
   );

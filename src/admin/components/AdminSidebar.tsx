@@ -52,10 +52,23 @@ export function AdminSidebar() {
         })}
       </nav>
       {!collapsed && (
-        <div className="absolute bottom-4 left-0 right-0 px-4">
+        <div className="absolute bottom-4 left-0 right-0 px-4 space-y-4">
           <div className="rounded-md bg-secondary p-3">
             <p className="text-xs text-muted-foreground">Logged in as</p>
             <p className="text-sm font-medium text-foreground">Super Admin</p>
+          </div>
+          <div className="text-center pt-2">
+            <p className="text-[10px] text-muted-foreground/60 uppercase tracking-[0.2em] leading-relaxed">
+              Developed by <br />
+              <a 
+                href="https://webfloratechnologies.com" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="inline-block text-foreground/80 hover:text-blue-500 hover:scale-105 transition-all duration-200 font-bold"
+              >
+                Webflora Technologies
+              </a>
+            </p>
           </div>
         </div>
       )}

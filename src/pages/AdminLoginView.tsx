@@ -146,8 +146,9 @@ const AdminLoginView = () => {
                     </div>
                 </div>
 
-                <p className="text-center text-[10px] text-muted-foreground/40 mt-8 uppercase tracking-[0.3em]">
-                    HEO Sahyog © 2026 Internal System
+                <p className="text-center text-[10px] text-muted-foreground/40 mt-8 uppercase tracking-[0.3em] font-medium">
+                    HEO Sahyog © 2026 Internal System <br />
+                    <span className="opacity-50">Developed by</span> <a href="https://webfloratechnologies.com" target="_blank" rel="noopener noreferrer" className="inline-block text-white/70 hover:text-blue-400 hover:scale-105 transition-all duration-200">Webflora Technologies</a>
                 </p>
             </motion.div>
         </div>
